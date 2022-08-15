@@ -5,3 +5,4 @@ DestroyWindow
 RegisterClass
 DefWindowProc
 ShowWindow
+MonitorFromWindow

@@ -7,5 +7,5 @@ Runs a system tray application, and can be closed at any time just closing it fr
 
 ## Building
 
-Requires .NET 6and WPF.
+Requires .NET 6 and WPF.
 Only runs on Windows. (Sorry.)

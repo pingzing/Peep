@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:Peep"
         mc:Ignorable="d"
         
+        Activated="Window_Activated"
         BorderThickness="0"
         ResizeMode="NoResize"
         Background="Transparent"
