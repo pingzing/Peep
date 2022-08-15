@@ -1,0 +1,7 @@
+﻿RegisterHotKey
+UnregisterHotKey
+CreateWindowEx
+DestroyWindow
+RegisterClass
+DefWindowProc
+ShowWindow
