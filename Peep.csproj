@@ -4,18 +4,33 @@
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net6.0-windows10.0.19041.0</TargetFramework>
 		<Nullable>enable</Nullable>
-		<UseWPF>true</UseWPF>		
+		<UseWPF>true</UseWPF>
+		<ApplicationIcon>peep.ico</ApplicationIcon>		
 	</PropertyGroup>
 
-	<PropertyGroup Condition="">
-		
+	<!--Release-only publish settings-->
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<PublishSingleFile>true</PublishSingleFile>
+		<SelfContained>true</SelfContained>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<PublishReadyToRun>true</PublishReadyToRun>
+		<TrimMode>copyused</TrimMode>
 	</PropertyGroup>
+
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+		<TrimmerRootAssembly Include="System.Collections" />
+		<TrimmerRootAssembly Include="System.Runtime" />
+		<TrimmerRootAssembly Include="System.Runtime.Extensions" />
+		<TrimmerRootAssembly Include="System.Runtime.InteropServices" />
+		<TrimmerRootAssembly Include="System.Runtime.CompilerServices.VisualC" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <None Remove="peep.mp4" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Include="peep.ico" />
 	  <Content Include="peep.mp4">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
