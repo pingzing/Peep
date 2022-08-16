@@ -1,9 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using Windows.Win32;
 using Windows.Win32.Foundation;
-using Windows.Win32.UI.WindowsAndMessaging;
 using Windows.Win32.Graphics.Gdi;
-using System.ComponentModel;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Peep
 {
@@ -13,7 +13,7 @@ namespace Peep
 
         private WNDPROC? messageHandler;
         public string WindowId { get; private set; } = null!;
-        public HWND MessagingSinkHwnd { get; private set; }
+        public HWND WindowHandle { get; private set; }
 
         public MessagingSink()
         {
@@ -58,10 +58,10 @@ namespace Peep
                         new PCWSTR(windowIdLocal),
                         new PCWSTR(emptyString),
                         WINDOW_STYLE.WS_OVERLAPPED,
-                        0,
-                        0,
-                        1,
-                        1,
+                        X: 0,
+                        Y: 0,
+                        nWidth: 1,
+                        nHeight: 1,
                         new HWND(IntPtr.Zero),
                         new HMENU(IntPtr.Zero),
                         new HINSTANCE(IntPtr.Zero),
@@ -75,7 +75,7 @@ namespace Peep
                 throw new Win32Exception("The Message Sink window's HWND was invalid.");
             }
 
-            MessagingSinkHwnd = messageSinkHwnd;
+            WindowHandle = messageSinkHwnd;
         }
 
         private LRESULT OnWindowMessageReceived(HWND msg, uint msgId, WPARAM wParam, LPARAM lParam)
@@ -86,8 +86,7 @@ namespace Peep
 
         private void ProcessWindowMessage(uint msg, WPARAM wParam, LPARAM lParam)
         {
-            // 0x0312 = WM_HOTKEY
-            if (msg == 0x0312)
+            if (msg == PInvoke.WM_HOTKEY)
             {
                 ((App)App.Current).HotkeyTriggered();
             }
@@ -102,7 +101,7 @@ namespace Peep
 
             disposedValue = true;
 
-            PInvoke.DestroyWindow(MessagingSinkHwnd);
+            PInvoke.DestroyWindow(WindowHandle);
             messageHandler = null;
         }
 

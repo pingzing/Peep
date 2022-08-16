@@ -10,7 +10,6 @@
         BorderThickness="0"
         ResizeMode="NoResize"
         Background="Transparent"
-        ContentRendered="PeepWindow_Rendered"
         Height="160" Width="156"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
@@ -18,7 +17,9 @@
         >
     <Grid>
         <MediaElement x:Name="MediaPlayerElement"
-                      LoadedBehavior="Play"
+                      Visibility="Collapsed"
+                      Loaded="MediaPlayerElement_Loaded"
+                      LoadedBehavior="Manual"
                       Source="peep.mp4"/>
     </Grid>
 </Window>
