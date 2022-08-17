@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -39,6 +41,9 @@ namespace Peep
                 // Since this is a single-instance app, shut down.
                 Current.Shutdown();
             }
+
+            // Disable tablet support. Otherwise, the loaded stylus support takes up around 200KB.
+            DisableWPFTabletSupport();
 
             _taskbarIcon = new TaskbarIcon();
             _taskbarIcon.Icon = Peep.Properties.Resources.PeepIcon;
@@ -93,5 +98,45 @@ namespace Peep
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
 
         private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => Current.Shutdown();
+
+        public static void DisableWPFTabletSupport()
+        {
+            // Get a collection of the tablet devices for this window.
+            TabletDeviceCollection devices = Tablet.TabletDevices;
+
+            if (devices.Count > 0)
+            {
+                // Get the Type of InputManager.
+                Type inputManagerType = typeof(InputManager);
+
+                // Call the StylusLogic method on the InputManager.Current instance.
+                object? stylusLogic = inputManagerType.InvokeMember(
+                    "StylusLogic",
+                    BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                    null,
+                    InputManager.Current,
+                    null
+                );
+
+                if (stylusLogic != null)
+                {
+                    //  Get the type of the stylusLogic returned from the call to StylusLogic.
+                    Type stylusLogicType = stylusLogic.GetType();
+
+                    // Loop until there are no more devices to remove.
+                    while (devices.Count > 0)
+                    {
+                        // Remove the first tablet device in the devices collection.
+                        stylusLogicType.InvokeMember(
+                            "OnTabletRemoved",
+                            BindingFlags.InvokeMethod | BindingFlags.Instance | BindingFlags.NonPublic,
+                            null,
+                            stylusLogic,
+                            new object[] { (uint)0 }
+                        );
+                    }
+                }
+            }
+        }
     }
 }
