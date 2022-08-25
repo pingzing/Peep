@@ -1,57 +1,49 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-using System.Runtime.InteropServices;
+﻿using Hardcodet.Wpf.TaskbarNotification;
+using System;
+using System.Drawing;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Hardcodet.Wpf.TaskbarNotification;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
+using System.Reflection;
 
-namespace Peep
+namespace Peep.Shared
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    public class Startup
     {
-        private const string UniqueAppId = "3f098cbe-d3a1-40f8-a61e-e20e49b9e2c1";
         private const int PeepHotkeyId = 0;
+        private const string UniqueAppId = "3f098cbe-d3a1-40f8-a61e-e20e49b9e2c1";
+        private MessagingSink _messagingSink = null;
+        private TaskbarIcon _taskbarIcon = null;
 
-        private Mutex _singleInstanceMutex = null!;
-        private TaskbarIcon _taskbarIcon = null!;
-        private MessagingSink _messagingSink = null!;
-        private PeepWindow? _peepWindow = null!;
+        public event EventHandler TrayClosedPressed;
+        public event EventHandler HotkeyPressed;
 
-        public App()
+        public static void EnforceSingleInstance(Application app)
         {
-            this.Startup += App_Startup;
-            this.Exit += App_Exit;
-        }
-
-        private void App_Startup(object sender, StartupEventArgs e)
-        {
-            _singleInstanceMutex = new Mutex(true, UniqueAppId, out bool isNewInstance);
+            _ = new Mutex(true, UniqueAppId, out bool isNewInstance);
             if (!isNewInstance)
             {
                 // If someone already owns this mutex, it means the app is already running.
                 // Since this is a single-instance app, shut down.
-                Current.Shutdown();
+                app.Shutdown();
             }
+        }
 
-            // Disable tablet support. Otherwise, the loaded stylus support takes up around 200KB.
-            DisableWPFTabletSupport();
-
+        public void SetupTaskbarIcon(Icon icon)
+        {
             _taskbarIcon = new TaskbarIcon();
-            _taskbarIcon.Icon = Peep.Properties.Resources.PeepIcon;
+            _taskbarIcon.Icon = icon;
             _taskbarIcon.ToolTipText = "Peep!";
 
             // Close button
             var contextMenu = new ContextMenu();
-            MenuItem closeMenuItem = new() { Header = "Close", Command = ApplicationCommands.Close, };
+            MenuItem closeMenuItem = new MenuItem() { Header = "Close", Command = ApplicationCommands.Close, };
             closeMenuItem.CommandBindings.Add(
                 new CommandBinding(ApplicationCommands.Close, CloseExecuted, CanExecuteClose)
             );
@@ -59,9 +51,13 @@ namespace Peep
 
             _taskbarIcon.ContextMenu = contextMenu;
             _taskbarIcon.MenuActivation = PopupActivationMode.LeftOrRightClick;
+        }
 
+        public void RegisterPeepHotkey()
+        {
             // Register global hotkey
             _messagingSink = new MessagingSink();
+            _messagingSink.HotkeyPressed += MessagingSink_HotkeyPressed;
             BOOL hotkeySuccess = PInvoke.RegisterHotKey(
                 _messagingSink.WindowHandle,
                 PeepHotkeyId,
@@ -71,13 +67,19 @@ namespace Peep
 
             if (!hotkeySuccess)
             {
-                int lastError = Marshal.GetLastPInvokeError();
+                int lastError = Marshal.GetLastWin32Error();
                 Debug.WriteLine($"Hotkey registry failed! Oh no! LastError: {lastError}");
             }
         }
 
-        private void App_Exit(object sender, ExitEventArgs e)
+        private void MessagingSink_HotkeyPressed(object sender, EventArgs e)
         {
+            HotkeyPressed?.Invoke(sender, e);
+        }
+
+        public void UnregisterPeepHotkey()
+        {
+            _messagingSink.HotkeyPressed -= HotkeyPressed;
             BOOL unregisterSuccess = PInvoke.UnregisterHotKey(_messagingSink.WindowHandle, PeepHotkeyId);
             if (!unregisterSuccess)
             {
@@ -85,19 +87,9 @@ namespace Peep
             }
         }
 
-        public void HotkeyTriggered()
-        {
-            if (_peepWindow == null)
-            {
-                _peepWindow = new PeepWindow() { Topmost = true };
-            }
-
-            _peepWindow.Peep();
-        }
-
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
 
-        private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => Current.Shutdown();
+        private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => TrayClosedPressed?.Invoke(this, null);
 
         public static void DisableWPFTabletSupport()
         {
@@ -110,7 +102,7 @@ namespace Peep
                 Type inputManagerType = typeof(InputManager);
 
                 // Call the StylusLogic method on the InputManager.Current instance.
-                object? stylusLogic = inputManagerType.InvokeMember(
+                object stylusLogic = inputManagerType.InvokeMember(
                     "StylusLogic",
                     BindingFlags.GetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                     null,

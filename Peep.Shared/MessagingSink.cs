@@ -11,9 +11,10 @@ namespace Peep
     {
         private bool disposedValue;
 
-        private WNDPROC? messageHandler;
-        public string WindowId { get; private set; } = null!;
+        private WNDPROC messageHandler;
+        public string WindowId { get; private set; }
         public HWND WindowHandle { get; private set; }
+        public event EventHandler HotkeyPressed;
 
         public MessagingSink()
         {
@@ -25,7 +26,7 @@ namespace Peep
             WindowId = "PeepTaskbarIcon_" + Guid.NewGuid();
             messageHandler = OnWindowMessageReceived;
 
-            WNDCLASSW wc = new();
+            WNDCLASSW wc = new WNDCLASSW();
             unsafe
             {
                 fixed (char* windowIdLocal = WindowId)
@@ -88,7 +89,7 @@ namespace Peep
         {
             if (msg == PInvoke.WM_HOTKEY)
             {
-                ((App)App.Current).HotkeyTriggered();
+                HotkeyPressed?.Invoke(this, null);
             }
         }
 

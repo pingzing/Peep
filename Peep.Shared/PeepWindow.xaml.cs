@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
 
-namespace Peep
+namespace Peep.Shared
 {
     public partial class PeepWindow : Window
     {
@@ -30,7 +30,11 @@ namespace Peep
             // Get DPI scaling
             //find out if our app is being scaled by the monitor
             PresentationSource source = PresentationSource.FromVisual(this);
-            double dpiScaling = (source != null && source.CompositionTarget != null ? source.CompositionTarget.TransformFromDevice.M11 : 1);
+            double dpiScaling = (
+                source != null && source.CompositionTarget != null
+                    ? source.CompositionTarget.TransformFromDevice.M11
+                    : 1
+            );
 
             // Get monitor mouse is on.
             var mousePos = Control.MousePosition;

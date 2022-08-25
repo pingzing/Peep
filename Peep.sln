@@ -3,7 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32804.467
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peep", "Peep.csproj", "{258664C3-71A9-41A9-A790-FCC716A590E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peep.Shared", "Peep.Shared\Peep.Shared.csproj", "{C615DEB1-C6F8-4218-B707-0E16FA78654F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peep.NetFx", "Peep.NetFx\Peep.NetFx.csproj", "{5F16FD0B-7938-4079-8926-B5D920C74E1D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peep.NetLatest", "Peep.Test\Peep.NetLatest.csproj", "{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{EEAE4D88-B7B2-4E6B-BAB7-7C7FFAC738CC}"
+	ProjectSection(SolutionItems) = preProject
+		.csharpierrc = .csharpierrc
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		bat-face-micro.png = bat-face-micro.png
+		bat-face-tiny.png = bat-face-tiny.png
+		bat-face.png = bat-face.png
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +27,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{258664C3-71A9-41A9-A790-FCC716A590E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{258664C3-71A9-41A9-A790-FCC716A590E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{258664C3-71A9-41A9-A790-FCC716A590E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{258664C3-71A9-41A9-A790-FCC716A590E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C615DEB1-C6F8-4218-B707-0E16FA78654F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C615DEB1-C6F8-4218-B707-0E16FA78654F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C615DEB1-C6F8-4218-B707-0E16FA78654F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C615DEB1-C6F8-4218-B707-0E16FA78654F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
