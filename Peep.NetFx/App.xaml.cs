@@ -1,5 +1,4 @@
 ﻿using Peep.Shared;
-using System;
 using System.Windows;
 
 namespace Peep.NetFx
@@ -20,24 +19,20 @@ namespace Peep.NetFx
             Shared.Startup.EnforceSingleInstance(this);
             Shared.Startup.DisableWPFTabletSupport();
 
-            _startupHelper = new Startup();
-            _startupHelper.TrayClosedPressed += ClosePressed;
-            _startupHelper.SetupTaskbarIcon(NetFx.Properties.Resources.PeepIcon);
-            _startupHelper.RegisterPeepHotkey();
-            _startupHelper.HotkeyPressed += StartupHelper_HotkeyPressed;
+            _startupHelper = new Startup(
+                trayIcon: NetFx.Properties.Resources.PeepIcon,
+                closedPressed: () => Current.Shutdown(),
+                hotkeyPressed: (int hotkeyId) =>
+                {
+                    if (_peepWindow == null)
+                    {
+                        _peepWindow = new PeepWindow() { Topmost = true };
+                    }
+
+                    _peepWindow.Peep();
+                }
+            );
         }
-
-        private void StartupHelper_HotkeyPressed(object sender, EventArgs e)
-        {
-            if (_peepWindow == null)
-            {
-                _peepWindow = new PeepWindow() { Topmost = true };
-            }
-
-            _peepWindow.Peep();
-        }
-
-        private void ClosePressed(object sender, EventArgs e) => Current.Shutdown();
 
         private void App_Exit(object sender, ExitEventArgs e) => _startupHelper.UnregisterPeepHotkey();
     }

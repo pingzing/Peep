@@ -11,6 +11,7 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Reflection;
+using Microsoft.Win32;
 
 namespace Peep.Shared
 {
@@ -18,11 +19,12 @@ namespace Peep.Shared
     {
         private const int PeepHotkeyId = 0;
         private const string UniqueAppId = "3f098cbe-d3a1-40f8-a61e-e20e49b9e2c1";
+
+        private Action _closedPressed;
+        private Action<int> _hotkeyPressed;
+
         private MessagingSink _messagingSink = null;
         private TaskbarIcon _taskbarIcon = null;
-
-        public event EventHandler TrayClosedPressed;
-        public event EventHandler HotkeyPressed;
 
         public static void EnforceSingleInstance(Application app)
         {
@@ -35,10 +37,14 @@ namespace Peep.Shared
             }
         }
 
-        public void SetupTaskbarIcon(Icon icon)
+        public Startup(Icon trayIcon, Action closedPressed, Action<int> hotkeyPressed)
         {
+            _closedPressed = closedPressed;
+            _hotkeyPressed = hotkeyPressed;
+
+            // Setup tray icon
             _taskbarIcon = new TaskbarIcon();
-            _taskbarIcon.Icon = icon;
+            _taskbarIcon.Icon = trayIcon;
             _taskbarIcon.ToolTipText = "Peep!";
 
             // Close button
@@ -51,10 +57,7 @@ namespace Peep.Shared
 
             _taskbarIcon.ContextMenu = contextMenu;
             _taskbarIcon.MenuActivation = PopupActivationMode.LeftOrRightClick;
-        }
 
-        public void RegisterPeepHotkey()
-        {
             // Register global hotkey
             _messagingSink = new MessagingSink();
             _messagingSink.HotkeyPressed += MessagingSink_HotkeyPressed;
@@ -72,14 +75,9 @@ namespace Peep.Shared
             }
         }
 
-        private void MessagingSink_HotkeyPressed(object sender, EventArgs e)
-        {
-            HotkeyPressed?.Invoke(sender, e);
-        }
-
         public void UnregisterPeepHotkey()
         {
-            _messagingSink.HotkeyPressed -= HotkeyPressed;
+            _messagingSink.HotkeyPressed -= MessagingSink_HotkeyPressed;
             BOOL unregisterSuccess = PInvoke.UnregisterHotKey(_messagingSink.WindowHandle, PeepHotkeyId);
             if (!unregisterSuccess)
             {
@@ -87,9 +85,14 @@ namespace Peep.Shared
             }
         }
 
+        private void MessagingSink_HotkeyPressed(object sender, EventArgs e)
+        {
+            _hotkeyPressed(PeepHotkeyId);
+        }
+
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
 
-        private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => TrayClosedPressed?.Invoke(this, null);
+        private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => _closedPressed();
 
         public static void DisableWPFTabletSupport()
         {
