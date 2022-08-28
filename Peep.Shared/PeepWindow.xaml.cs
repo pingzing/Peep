@@ -2,10 +2,12 @@
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Brush = System.Windows.Media.Brush;
 
 namespace Peep.Shared
 {
@@ -40,7 +42,7 @@ namespace Peep.Shared
             );
 
             // Get monitor mouse is on.
-            var mousePos = Control.MousePosition;
+            var mousePos = System.Windows.Forms.Control.MousePosition;
             var mouseScreen = Screen.FromPoint(mousePos);
 
             // Get DPI-scaled width and height of the current monitor's Work Area (i.e. bounds minus taskbars etc)
@@ -59,7 +61,11 @@ namespace Peep.Shared
 
             // Show the window and play the video.
             Visibility = Visibility.Visible;
-            await FadeWindowBackground(FadeDirection.In);
+            await Task.WhenAll(
+                Fade(WindowBrush, Brush.OpacityProperty, FadeDirection.In),
+                Fade(MediaPlayerElement, OpacityProperty, FadeDirection.In)
+            );
+
             MediaPlayerElement.Visibility = Visibility.Visible;
             MediaPlayerElement.Play();
         }
@@ -70,17 +76,32 @@ namespace Peep.Shared
             Out
         }
 
-        private Task FadeWindowBackground(FadeDirection direction)
+        private Task Fade(Animatable element, DependencyProperty propertyToFade, FadeDirection direction)
         {
-            DoubleAnimation fadeIn = new DoubleAnimation();
-            fadeIn.From = direction == FadeDirection.In ? 0.0 : 1.0;
-            fadeIn.To = direction == FadeDirection.In ? 1.0 : 0.0;
-            fadeIn.Duration = TimeSpan.FromMilliseconds(150);
-            fadeIn.AutoReverse = false;
+            DoubleAnimation fade = ConstructFadeAnimation(direction);
             var tcs = new TaskCompletionSource<bool>();
-            fadeIn.Completed += (s, e) => tcs.SetResult(true);
-            WindowBrush.BeginAnimation(SolidColorBrush.OpacityProperty, fadeIn);
+            fade.Completed += (s, e) => tcs.SetResult(true);
+            element.BeginAnimation(propertyToFade, fade);
             return tcs.Task;
+        }
+
+        private Task Fade(UIElement element, DependencyProperty propertyToFade, FadeDirection direction)
+        {
+            DoubleAnimation fade = ConstructFadeAnimation(direction);
+            var tcs = new TaskCompletionSource<bool>();
+            fade.Completed += (s, e) => tcs.SetResult(true);
+            element.BeginAnimation(propertyToFade, fade);
+            return tcs.Task;
+        }
+
+        private DoubleAnimation ConstructFadeAnimation(FadeDirection direction)
+        {
+            DoubleAnimation fadeAnimation = new DoubleAnimation();
+            fadeAnimation.From = direction == FadeDirection.In ? 0.0 : 1.0;
+            fadeAnimation.To = direction == FadeDirection.In ? 1.0 : 0.0;
+            fadeAnimation.Duration = TimeSpan.FromMilliseconds(150);
+            fadeAnimation.AutoReverse = false;
+            return fadeAnimation;
         }
 
         private void SetDesiredRenderMode(Screen screenWithMose)
@@ -111,9 +132,12 @@ namespace Peep.Shared
             MediaPlayerElement.Position = TimeSpan.FromMilliseconds(1);
             MediaPlayerElement.Visibility = Visibility.Collapsed;
 
-            await FadeWindowBackground(FadeDirection.Out);
+            await Task.WhenAll(
+                Fade(WindowBrush, Brush.OpacityProperty, FadeDirection.Out),
+                Fade(MediaPlayerElement, OpacityProperty, FadeDirection.Out)
+            );
 
-            this.Visibility = Visibility.Hidden;
+            this.Visibility = Visibility.Collapsed;
         }
     }
 }
