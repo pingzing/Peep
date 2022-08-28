@@ -6,18 +6,21 @@
         mc:Ignorable="d"
         
         Activated="Window_Activated"
-        BorderThickness="0"
+        AllowsTransparency="True"
+        BorderThickness="0"        
+        BorderBrush="Transparent"
         ResizeMode="NoResize"
-        Background="Transparent"
         Height="160" Width="156"
         ShowInTaskbar="False"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         >
+    <Window.Background>
+        <SolidColorBrush x:Name="WindowBrush" Color="Black" Opacity="0"/>
+    </Window.Background>
     <Grid>
         <MediaElement x:Name="MediaPlayerElement"
-                      Visibility="Collapsed"
-                      Loaded="MediaPlayerElement_Loaded"
+                      Visibility="Collapsed"                      
                       LoadedBehavior="Manual"
                       Source="peep.mp4"/>
     </Grid>

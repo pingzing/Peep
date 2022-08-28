@@ -85,9 +85,9 @@ namespace Peep.Shared
             }
         }
 
-        private void MessagingSink_HotkeyPressed(object sender, EventArgs e)
+        private void MessagingSink_HotkeyPressed(object sender, int hotkeyId)
         {
-            _hotkeyPressed(PeepHotkeyId);
+            _hotkeyPressed(hotkeyId);
         }
 
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;

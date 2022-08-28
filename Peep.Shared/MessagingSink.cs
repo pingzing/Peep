@@ -14,7 +14,7 @@ namespace Peep
         private WNDPROC messageHandler;
         public string WindowId { get; private set; }
         public HWND WindowHandle { get; private set; }
-        public event EventHandler HotkeyPressed;
+        public event EventHandler<int> HotkeyPressed;
 
         public MessagingSink()
         {
@@ -85,11 +85,11 @@ namespace Peep
             return PInvoke.DefWindowProc(msg, msgId, wParam, lParam);
         }
 
-        private void ProcessWindowMessage(uint msg, WPARAM wParam, LPARAM lParam)
+        private void ProcessWindowMessage(uint msg, WPARAM hotkeyId, LPARAM pressedModifiers)
         {
             if (msg == PInvoke.WM_HOTKEY)
             {
-                HotkeyPressed?.Invoke(this, null);
+                HotkeyPressed?.Invoke(this, (int)hotkeyId.Value);
             }
         }
 

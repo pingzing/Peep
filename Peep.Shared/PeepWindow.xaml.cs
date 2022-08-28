@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace Peep.Shared
 {
@@ -19,7 +22,7 @@ namespace Peep.Shared
             // TODO: Might not need this.
         }
 
-        public void Peep()
+        public async void Peep()
         {
             if (Visibility == Visibility.Visible)
             {
@@ -49,18 +52,47 @@ namespace Peep.Shared
             Left = ((workAreaWidth - (Width * dpiScaling)) / 2) + (workArea.Left * dpiScaling);
             Top = ((workAreaHeight - (Height * dpiScaling)) / 2) + (workArea.Top * dpiScaling);
 
-            // Deal with MediaElement bug.
+            // Force software rendering for this Window if it's not on the primary monitor.
+            // Why? There's a bug in MediaElement! It doesn't play MP4 video if it isn't
+            // on the primary.
+            SetDesiredRenderMode(mouseScreen);
+
+            // Show the window and play the video.
+            Visibility = Visibility.Visible;
+            await FadeWindowBackground(FadeDirection.In);
+            MediaPlayerElement.Visibility = Visibility.Visible;
+            MediaPlayerElement.Play();
+        }
+
+        private enum FadeDirection
+        {
+            In,
+            Out
+        }
+
+        private Task FadeWindowBackground(FadeDirection direction)
+        {
+            DoubleAnimation fadeIn = new DoubleAnimation();
+            fadeIn.From = direction == FadeDirection.In ? 0.0 : 1.0;
+            fadeIn.To = direction == FadeDirection.In ? 1.0 : 0.0;
+            fadeIn.Duration = TimeSpan.FromMilliseconds(150);
+            fadeIn.AutoReverse = false;
+            var tcs = new TaskCompletionSource<bool>();
+            fadeIn.Completed += (s, e) => tcs.SetResult(true);
+            WindowBrush.BeginAnimation(SolidColorBrush.OpacityProperty, fadeIn);
+            return tcs.Task;
+        }
+
+        private void SetDesiredRenderMode(Screen screenWithMose)
+        {
             var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
             if (hwndSource != null)
             {
                 var hwndTarget = hwndSource.CompositionTarget;
                 if (hwndTarget != null)
                 {
-                    bool isOnPrimary = mouseScreen.Primary;
+                    bool isOnPrimary = screenWithMose.Primary;
 
-                    // Force software rendering for this Window if it's not on the primary monitor.
-                    // Why? There's a bug in MediaElement! It doesn't play MP4 video if it isn't
-                    // on the primary.
                     if (!isOnPrimary)
                     {
                         hwndTarget.RenderMode = RenderMode.SoftwareOnly;
@@ -71,21 +103,16 @@ namespace Peep.Shared
                     }
                 }
             }
-
-            // Show the window and play the video.
-            Visibility = Visibility.Visible;
-            MediaPlayerElement.Play();
         }
 
-        private void MediaPlayerElement_Loaded(object sender, RoutedEventArgs e)
-        {
-            MediaPlayerElement.Visibility = Visibility.Visible;
-        }
-
-        private void MediaPlayerElement_MediaEnded(object sender, RoutedEventArgs e)
+        private async void MediaPlayerElement_MediaEnded(object sender, RoutedEventArgs e)
         {
             MediaPlayerElement.Stop();
             MediaPlayerElement.Position = TimeSpan.FromMilliseconds(1);
+            MediaPlayerElement.Visibility = Visibility.Collapsed;
+
+            await FadeWindowBackground(FadeDirection.Out);
+
             this.Visibility = Visibility.Hidden;
         }
     }
