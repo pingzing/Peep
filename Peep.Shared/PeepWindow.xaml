@@ -12,13 +12,14 @@
         BorderBrush="Transparent"
         ResizeMode="NoResize"
         Height="160" Width="156"
-        ShowInTaskbar="False"
+        ShowInTaskbar="False"        
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         >
-    <Grid>
+    <Grid IsHitTestVisible="False">
         <Image x:Name="ImageElement" 
                Opacity="1"
+               IsHitTestVisible="False"
                gif:AnimationBehavior.SourceUri="peep.gif"               
                gif:AnimationBehavior.AutoStart="False"
                gif:AnimationBehavior.RepeatBehavior="1x"               

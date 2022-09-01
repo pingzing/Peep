@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -26,6 +24,13 @@ namespace Peep.Shared
         private void ImageElement_Loaded(object sender, RoutedEventArgs e)
         {
             _gifController = AnimationBehavior.GetAnimator(ImageElement);
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            WindowExtensions.SetWindowExTransparent(hwnd);
         }
 
         public async void Peep()

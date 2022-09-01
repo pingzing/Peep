@@ -6,3 +6,6 @@ RegisterClass
 DefWindowProc
 ShowWindow
 WM_HOTKEY
+GetWindowLong
+SetWindowLong
+WS_EX_TRANSPARENT
