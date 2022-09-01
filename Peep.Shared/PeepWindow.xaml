@@ -3,10 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"       
+        xmlns:gif="https://github.com/XamlAnimatedGif/XamlAnimatedGif"
         mc:Ignorable="d"
         
-        Activated="Window_Activated"
         AllowsTransparency="True"
+        Background="Transparent"
         BorderThickness="0"        
         BorderBrush="Transparent"
         ResizeMode="NoResize"
@@ -15,13 +16,15 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         >
-    <Window.Background>
-        <SolidColorBrush x:Name="WindowBrush" Color="Black" Opacity="0"/>
-    </Window.Background>
     <Grid>
-        <MediaElement x:Name="MediaPlayerElement"
-                      Visibility="Collapsed"                      
-                      LoadedBehavior="Manual"
-                      Source="peep.mp4"/>
+        <Image x:Name="ImageElement" 
+               Opacity="1"
+               gif:AnimationBehavior.SourceUri="peep.gif"               
+               gif:AnimationBehavior.AutoStart="False"
+               gif:AnimationBehavior.RepeatBehavior="1x"               
+               gif:AnimationBehavior.Loaded="ImageElement_Loaded"
+               gif:AnimationBehavior.AnimationStarted="ImageElement_AnimationStarted"
+               gif:AnimationBehavior.AnimationCompleted="ImageElement_AnimationCompleted"/>
+
     </Grid>
 </Window>

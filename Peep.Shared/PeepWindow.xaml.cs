@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
@@ -7,21 +8,24 @@ using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using Brush = System.Windows.Media.Brush;
+using XamlAnimatedGif;
 
 namespace Peep.Shared
 {
     public partial class PeepWindow : Window
     {
+        private MediaPlayer _soundPlayer = new MediaPlayer();
+        private Animator _gifController;
+
         public PeepWindow()
         {
             InitializeComponent();
-            MediaPlayerElement.MediaEnded += MediaPlayerElement_MediaEnded;
+            _soundPlayer.Open(new Uri("peep.mp3", UriKind.RelativeOrAbsolute));
         }
 
-        private void Window_Activated(object sender, EventArgs e)
+        private void ImageElement_Loaded(object sender, RoutedEventArgs e)
         {
-            // TODO: Might not need this.
+            _gifController = AnimationBehavior.GetAnimator(ImageElement);
         }
 
         public async void Peep()
@@ -54,20 +58,31 @@ namespace Peep.Shared
             Left = ((workAreaWidth - (Width * dpiScaling)) / 2) + (workArea.Left * dpiScaling);
             Top = ((workAreaHeight - (Height * dpiScaling)) / 2) + (workArea.Top * dpiScaling);
 
-            // Force software rendering for this Window if it's not on the primary monitor.
-            // Why? There's a bug in MediaElement! It doesn't play MP4 video if it isn't
-            // on the primary.
-            SetDesiredRenderMode(mouseScreen);
-
-            // Show the window and play the video.
+            // Show the window and play the gif.
             Visibility = Visibility.Visible;
-            await Task.WhenAll(
-                Fade(WindowBrush, Brush.OpacityProperty, FadeDirection.In),
-                Fade(MediaPlayerElement, OpacityProperty, FadeDirection.In)
-            );
+            await Fade(ImageElement, OpacityProperty, FadeDirection.In);
+            ImageElement.Opacity = 1;
 
-            MediaPlayerElement.Visibility = Visibility.Visible;
-            MediaPlayerElement.Play();
+            _gifController.Play();
+        }
+
+        private void ImageElement_AnimationStarted(DependencyObject d, AnimationStartedEventArgs e)
+        {
+            // Slaved to the gif rather than being run simultaneously,
+            // to try to reduce desync.
+            _soundPlayer.Play();
+        }
+
+        private async void ImageElement_AnimationCompleted(DependencyObject d, AnimationCompletedEventArgs e)
+        {
+            _gifController.Pause();
+            _gifController.Rewind();
+            _soundPlayer.Stop();
+            _soundPlayer.Position = TimeSpan.Zero;
+
+            await Fade(ImageElement, OpacityProperty, FadeDirection.Out);
+            ImageElement.Opacity = 0;
+            Visibility = Visibility.Collapsed;
         }
 
         private enum FadeDirection
@@ -76,68 +91,20 @@ namespace Peep.Shared
             Out
         }
 
-        private Task Fade(Animatable element, DependencyProperty propertyToFade, FadeDirection direction)
-        {
-            DoubleAnimation fade = ConstructFadeAnimation(direction);
-            var tcs = new TaskCompletionSource<bool>();
-            fade.Completed += (s, e) => tcs.SetResult(true);
-            element.BeginAnimation(propertyToFade, fade);
-            return tcs.Task;
-        }
-
         private Task Fade(UIElement element, DependencyProperty propertyToFade, FadeDirection direction)
         {
-            DoubleAnimation fade = ConstructFadeAnimation(direction);
+            DoubleAnimation fade = new DoubleAnimation
+            {
+                From = direction == FadeDirection.In ? 0.0 : 1.0,
+                To = direction == FadeDirection.In ? 1.0 : 0.0,
+                Duration = TimeSpan.FromMilliseconds(150),
+                AutoReverse = false,
+                FillBehavior = FillBehavior.Stop
+            };
             var tcs = new TaskCompletionSource<bool>();
             fade.Completed += (s, e) => tcs.SetResult(true);
             element.BeginAnimation(propertyToFade, fade);
             return tcs.Task;
-        }
-
-        private DoubleAnimation ConstructFadeAnimation(FadeDirection direction)
-        {
-            DoubleAnimation fadeAnimation = new DoubleAnimation();
-            fadeAnimation.From = direction == FadeDirection.In ? 0.0 : 1.0;
-            fadeAnimation.To = direction == FadeDirection.In ? 1.0 : 0.0;
-            fadeAnimation.Duration = TimeSpan.FromMilliseconds(150);
-            fadeAnimation.AutoReverse = false;
-            return fadeAnimation;
-        }
-
-        private void SetDesiredRenderMode(Screen screenWithMose)
-        {
-            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
-            if (hwndSource != null)
-            {
-                var hwndTarget = hwndSource.CompositionTarget;
-                if (hwndTarget != null)
-                {
-                    bool isOnPrimary = screenWithMose.Primary;
-
-                    if (!isOnPrimary)
-                    {
-                        hwndTarget.RenderMode = RenderMode.SoftwareOnly;
-                    }
-                    else
-                    {
-                        hwndTarget.RenderMode = RenderMode.Default;
-                    }
-                }
-            }
-        }
-
-        private async void MediaPlayerElement_MediaEnded(object sender, RoutedEventArgs e)
-        {
-            MediaPlayerElement.Stop();
-            MediaPlayerElement.Position = TimeSpan.FromMilliseconds(1);
-            MediaPlayerElement.Visibility = Visibility.Collapsed;
-
-            await Task.WhenAll(
-                Fade(WindowBrush, Brush.OpacityProperty, FadeDirection.Out),
-                Fade(MediaPlayerElement, OpacityProperty, FadeDirection.Out)
-            );
-
-            this.Visibility = Visibility.Collapsed;
         }
     }
 }

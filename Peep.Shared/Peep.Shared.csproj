@@ -98,12 +98,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="XamlAnimatedGif">
+      <Version>2.0.2</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="NativeMethods.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="peep.mp4">
+    <Resource Include="peep.gif" />
+    <Content Include="peep.mp3">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
