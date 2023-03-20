@@ -52,7 +52,9 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomCommands.cs" />
     <Compile Include="MessagingSink.cs" />
+    <Compile Include="ShellInterop.cs" />
     <Compile Include="Startup.cs">
       <SubType>Code</SubType>
     </Compile>

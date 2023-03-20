@@ -11,7 +11,9 @@ using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using System.Reflection;
-using Microsoft.Win32;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Peep.Shared
 {
@@ -19,9 +21,12 @@ namespace Peep.Shared
     {
         private const int PeepHotkeyId = 0;
         private const string UniqueAppId = "3f098cbe-d3a1-40f8-a61e-e20e49b9e2c1";
+        private const string StartupEntryName = "Peep.lnk";
 
-        private Action _closedPressed;
-        private Action<int> _hotkeyPressed;
+        private readonly string _executablePath;
+
+        private readonly Action _closedPressed;
+        private readonly Action<int> _hotkeyPressed;
 
         private MessagingSink _messagingSink = null;
         private TaskbarIcon _taskbarIcon = null;
@@ -37,18 +42,23 @@ namespace Peep.Shared
             }
         }
 
-        public Startup(Icon trayIcon, Action closedPressed, Action<int> hotkeyPressed)
+        public Startup(Icon trayIcon, Action closedPressed, Action<int> hotkeyPressed, string executablePath)
         {
             _closedPressed = closedPressed;
             _hotkeyPressed = hotkeyPressed;
+            _executablePath = executablePath;
 
             // Setup tray icon
             _taskbarIcon = new TaskbarIcon();
             _taskbarIcon.Icon = trayIcon;
             _taskbarIcon.ToolTipText = "Peep!";
 
-            // Close button
             var contextMenu = new ContextMenu();
+
+            MenuItem toggleStartupMenuItem = BuildToggleStartupButton();
+            contextMenu.Items.Add(toggleStartupMenuItem);
+
+            // Close button
             MenuItem closeMenuItem = new MenuItem() { Header = "Close", Command = ApplicationCommands.Close, };
             closeMenuItem.CommandBindings.Add(
                 new CommandBinding(ApplicationCommands.Close, CloseExecuted, CanExecuteClose)
@@ -75,6 +85,23 @@ namespace Peep.Shared
             }
         }
 
+        private MenuItem BuildToggleStartupButton()
+        {
+            bool isEnabled = GetStartupShortcutPath() != null;
+
+            MenuItem toggleStartup = new MenuItem
+            {
+                Header = "Launch on startup",
+                Command = CustomCommands.ToggleOnStartup,
+                IsCheckable = true,
+                IsChecked = isEnabled
+            };
+            toggleStartup.CommandBindings.Add(
+                new CommandBinding(CustomCommands.ToggleOnStartup, ToggleOnStartupExecuted, CanExecuteToggleOnStartup)
+            );
+            return toggleStartup;
+        }
+
         public void UnregisterPeepHotkey()
         {
             _messagingSink.HotkeyPressed -= MessagingSink_HotkeyPressed;
@@ -93,6 +120,80 @@ namespace Peep.Shared
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
 
         private void CloseExecuted(object sender, ExecutedRoutedEventArgs e) => _closedPressed();
+
+        private void CanExecuteToggleOnStartup(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
+
+        private void ToggleOnStartupExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            // todo: if can find entry in startup, remove and untick checkbox
+            // else add and tick checkbox
+            // sender is MenuItem, and IsChecked has ALREADY been updated by the time we get here.
+            string startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            if (string.IsNullOrEmpty(startupFolder))
+            {
+                return;
+            }
+
+            MenuItem toggleStartup = (sender as MenuItem);
+            if (toggleStartup == null)
+            {
+                return;
+            }
+
+            bool shouldEnable = toggleStartup.IsChecked;
+
+            string shortcutPath = GetStartupShortcutPath();
+
+            // Four states:
+            // - ShouldEnable, and doesn't exist: create
+            // - ShouldEnable, and exists: do nothing
+            // - !ShouldEnable, and doesn't exist: do nothing
+            // - !ShouldEnable, and exists: delete
+
+            if (shouldEnable && shortcutPath != null)
+            {
+                return;
+            }
+
+            if (!shouldEnable && shortcutPath == null)
+            {
+                return;
+            }
+
+            if (shouldEnable) // ímplies doesn't exist
+            {
+                string targetPath = Path.Combine(AppContext.BaseDirectory, _executablePath);
+                IShellLink shortcut = (IShellLink)new ShellLink();
+                shortcut.SetDescription("Startup shortcut for Peep");
+                shortcut.SetPath(targetPath);
+
+                shortcutPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+                    StartupEntryName
+                );
+                IPersistFile file = (IPersistFile)shortcut;
+                file.Save(shortcutPath, false);
+            }
+            else // implies exists
+            {
+                File.Delete(
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), StartupEntryName)
+                );
+            }
+        }
+
+        private string GetStartupShortcutPath()
+        {
+            string startupFolder = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            string[] startupEntries = Directory.GetFiles(startupFolder);
+            string shortcutPath = startupEntries.FirstOrDefault(x =>
+            {
+                string fileName = Path.GetFileName(x);
+                return fileName == StartupEntryName;
+            });
+
+            return shortcutPath;
+        }
 
         public static void DisableWPFTabletSupport()
         {

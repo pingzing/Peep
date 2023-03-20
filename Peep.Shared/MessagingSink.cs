@@ -7,6 +7,9 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Peep
 {
+    /// <summary>
+    /// A window whose sole purpose to is listen for WM_KEYDOWN events.
+    /// </summary>
     internal class MessagingSink : IDisposable
     {
         private bool disposedValue;

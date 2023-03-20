@@ -1,4 +1,5 @@
 ﻿using Peep.Shared;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Peep.NetLatest
@@ -19,6 +20,8 @@ namespace Peep.NetLatest
             Shared.Startup.EnforceSingleInstance(this);
             Shared.Startup.DisableWPFTabletSupport();
 
+            string executablePath = Process.GetCurrentProcess().MainModule!.FileName!;
+
             _startupHelper = new Startup(
                 trayIcon: NetLatest.Properties.Resources.PeepIcon,
                 closedPressed: () => Current.Shutdown(),
@@ -30,7 +33,8 @@ namespace Peep.NetLatest
                     }
 
                     _peepWindow.Peep();
-                }
+                },
+                executablePath: executablePath
             );
         }
 
