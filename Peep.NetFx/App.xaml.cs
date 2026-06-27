@@ -25,14 +25,14 @@ namespace Peep.NetFx
             _startupHelper = new Startup(
                 trayIcon: NetFx.Properties.Resources.PeepIcon,
                 closedPressed: () => Current.Shutdown(),
-                hotkeyPressed: (int hotkeyId) =>
+                hotkeyPressed: (int hotkeyId, ChosenCharacter chosenCharacter) =>
                 {
                     if (_peepWindow == null)
                     {
                         _peepWindow = new PeepWindow() { Topmost = true };
                     }
 
-                    _peepWindow.Peep();
+                    _peepWindow.Peep(chosenCharacter);
                 },
                 executablePath: executablePath
             );

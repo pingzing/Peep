@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,18 +13,31 @@ namespace Peep.Shared
 {
     public partial class PeepWindow : Window
     {
+        private readonly List<(string, string, Stretch)> _ventressInfo =
+            new() { ("sounds/ventress/peep.mp3", "gifs/ventress/peep.gif", Stretch.Uniform) };
+
+        private readonly List<(string, string, Stretch)> _kawKawInfo =
+            new()
+            {
+                ("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+                ("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+            };
+
         private MediaPlayer _soundPlayer = new MediaPlayer();
         private Animator _gifController;
+        private Random _random = new Random();
+        private TaskCompletionSource<bool> _animatorReady = new();
 
         public PeepWindow()
         {
             InitializeComponent();
-            _soundPlayer.Open(new Uri("peep.mp3", UriKind.RelativeOrAbsolute));
         }
 
+        // Fires every time we (re)load the image's UriSource
         private void ImageElement_Loaded(object sender, RoutedEventArgs e)
         {
             _gifController = AnimationBehavior.GetAnimator(ImageElement);
+            _animatorReady.SetResult(true);
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -33,13 +47,34 @@ namespace Peep.Shared
             WindowExtensions.SetWindowExTransparent(hwnd);
         }
 
-        public async void Peep()
+        private (string AudioPath, string VisualPath, Stretch VisualStretch) GetPeepInfo(ChosenCharacter character)
+        {
+            var targetList = character switch
+            {
+                ChosenCharacter.Ventress => _ventressInfo,
+                ChosenCharacter.KawKaw => _kawKawInfo,
+                _ => throw new Exception($"Invalid character: {character}")
+            };
+
+            int randomIndex = _random.Next(0, targetList.Count);
+            return targetList[randomIndex];
+        }
+
+        public async void Peep(ChosenCharacter chosenCharacter)
         {
             if (Visibility == Visibility.Visible)
             {
                 // Don't do anything if the window is already in the middle of peeping.
                 return;
             }
+
+            _gifController = null;
+            _animatorReady = new TaskCompletionSource<bool>();
+
+            (string audioPath, string visualPath, Stretch visualStretch) = GetPeepInfo(chosenCharacter);
+            ImageElement.Stretch = visualStretch;
+            _soundPlayer.Open(new Uri(audioPath, UriKind.RelativeOrAbsolute));
+            AnimationBehavior.SetSourceUri(ImageElement, new Uri(visualPath, UriKind.Relative));
 
             // Get DPI scaling
             //find out if our app is being scaled by the monitor
@@ -51,7 +86,7 @@ namespace Peep.Shared
             );
 
             // Get monitor mouse is on.
-            var mousePos = System.Windows.Forms.Control.MousePosition;
+            var mousePos = Control.MousePosition;
             var mouseScreen = Screen.FromPoint(mousePos);
 
             // Get DPI-scaled width and height of the current monitor's Work Area (i.e. bounds minus taskbars etc)
@@ -68,6 +103,8 @@ namespace Peep.Shared
             await Fade(ImageElement, OpacityProperty, FadeDirection.In);
             ImageElement.Opacity = 1;
 
+            // Wait for the image to finish loading and the GifController to be available.
+            await _animatorReady.Task;
             _gifController.Play();
         }
 
@@ -84,6 +121,7 @@ namespace Peep.Shared
             _gifController.Rewind();
             _soundPlayer.Stop();
             _soundPlayer.Position = TimeSpan.Zero;
+            _soundPlayer.Close();
 
             await Fade(ImageElement, OpacityProperty, FadeDirection.Out);
             ImageElement.Opacity = 0;

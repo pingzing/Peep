@@ -1,4 +1,5 @@
-﻿using Hardcodet.Wpf.TaskbarNotification;
+﻿#nullable enable
+using Hardcodet.Wpf.TaskbarNotification;
 using System;
 using System.Drawing;
 using System.Threading;
@@ -14,6 +15,7 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Configuration;
 
 namespace Peep.Shared
 {
@@ -26,10 +28,11 @@ namespace Peep.Shared
         private readonly string _executablePath;
 
         private readonly Action _closedPressed;
-        private readonly Action<int> _hotkeyPressed;
+        private readonly Action<int, ChosenCharacter> _hotkeyPressed;
 
-        private MessagingSink _messagingSink = null;
-        private TaskbarIcon _taskbarIcon = null;
+        private MessagingSink _messagingSink;
+        private TaskbarIcon _taskbarIcon;
+        private Settings _settings;
 
         public static void EnforceSingleInstance(Application app)
         {
@@ -42,21 +45,29 @@ namespace Peep.Shared
             }
         }
 
-        public Startup(Icon trayIcon, Action closedPressed, Action<int> hotkeyPressed, string executablePath)
+        public Startup(
+            Icon trayIcon,
+            Action closedPressed,
+            Action<int, ChosenCharacter> hotkeyPressed,
+            string executablePath
+        )
         {
+            _settings = new Settings();
             _closedPressed = closedPressed;
             _hotkeyPressed = hotkeyPressed;
             _executablePath = executablePath;
 
             // Setup tray icon
-            _taskbarIcon = new TaskbarIcon();
-            _taskbarIcon.Icon = trayIcon;
-            _taskbarIcon.ToolTipText = "Peep!";
+            _taskbarIcon = new TaskbarIcon { Icon = trayIcon, ToolTipText = "Peep!" };
 
             var contextMenu = new ContextMenu();
 
             MenuItem toggleStartupMenuItem = BuildToggleStartupButton();
             contextMenu.Items.Add(toggleStartupMenuItem);
+
+            // Setup character select menu
+            MenuItem selectCharacterMenuItem = BuildSelectCharacterSubMenu();
+            contextMenu.Items.Add(selectCharacterMenuItem);
 
             // Close button
             MenuItem closeMenuItem = new MenuItem() { Header = "Close", Command = ApplicationCommands.Close, };
@@ -102,6 +113,53 @@ namespace Peep.Shared
             return toggleStartup;
         }
 
+        private MenuItem BuildSelectCharacterSubMenu()
+        {
+            ChosenCharacter chosenCharacter = _settings.ChosenCharacter;
+
+            MenuItem topLevelMenuItem = new() { Header = "Select character", IsCheckable = false, };
+
+            MenuItem ventressItem =
+                new()
+                {
+                    Header = "Ventress (Bat Pony)",
+                    Tag = ChosenCharacter.Ventress,
+                    IsCheckable = true,
+                    Command = CustomCommands.CharacterChosen,
+                    CommandParameter = new ChosenCharacterCommandArgs
+                    {
+                        ChosenCharacter = ChosenCharacter.Ventress,
+                        CharacterSubmenu = topLevelMenuItem
+                    },
+                    IsChecked = chosenCharacter == ChosenCharacter.Ventress,
+                };
+            ventressItem.CommandBindings.Add(
+                new CommandBinding(CustomCommands.CharacterChosen, CharacterChosenExecuted, CanExecuteCharacterChosen)
+            );
+            topLevelMenuItem.Items.Add(ventressItem);
+
+            MenuItem kawKawItem =
+                new()
+                {
+                    Header = "KawKaw",
+                    Tag = ChosenCharacter.KawKaw,
+                    IsCheckable = true,
+                    Command = CustomCommands.CharacterChosen,
+                    CommandParameter = new ChosenCharacterCommandArgs
+                    {
+                        ChosenCharacter = ChosenCharacter.KawKaw,
+                        CharacterSubmenu = topLevelMenuItem
+                    },
+                    IsChecked = chosenCharacter == ChosenCharacter.KawKaw,
+                };
+            kawKawItem.CommandBindings.Add(
+                new CommandBinding(CustomCommands.CharacterChosen, CharacterChosenExecuted, CanExecuteCharacterChosen)
+            );
+            topLevelMenuItem.Items.Add(kawKawItem);
+
+            return topLevelMenuItem;
+        }
+
         public void UnregisterPeepHotkey()
         {
             _messagingSink.HotkeyPressed -= MessagingSink_HotkeyPressed;
@@ -114,7 +172,7 @@ namespace Peep.Shared
 
         private void MessagingSink_HotkeyPressed(object sender, int hotkeyId)
         {
-            _hotkeyPressed(hotkeyId);
+            _hotkeyPressed(hotkeyId, _settings.ChosenCharacter);
         }
 
         private void CanExecuteClose(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
@@ -134,7 +192,7 @@ namespace Peep.Shared
                 return;
             }
 
-            MenuItem toggleStartup = (sender as MenuItem);
+            MenuItem toggleStartup = (sender as MenuItem)!;
             if (toggleStartup == null)
             {
                 return;
@@ -179,6 +237,24 @@ namespace Peep.Shared
                 File.Delete(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Startup), StartupEntryName)
                 );
+            }
+        }
+
+        private void CanExecuteCharacterChosen(object sender, CanExecuteRoutedEventArgs e) => e.CanExecute = true;
+
+        private void CharacterChosenExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            ChosenCharacterCommandArgs args = (ChosenCharacterCommandArgs)e.Parameter;
+            _settings.ChosenCharacter = args.ChosenCharacter;
+
+            // Uncheck all menu items except for the one that just got selected
+            foreach (var item in args.CharacterSubmenu.Items)
+            {
+                if (item is not MenuItem menuItem)
+                {
+                    continue;
+                }
+                menuItem.IsChecked = (ChosenCharacter)menuItem.Tag == args.ChosenCharacter;
             }
         }
 

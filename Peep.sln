@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32804.467
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11828.311 oobstable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Peep.Shared", "Peep.Shared\Peep.Shared.csproj", "{C615DEB1-C6F8-4218-B707-0E16FA78654F}"
 EndProject
@@ -36,6 +36,7 @@ Global
 		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F16FD0B-7938-4079-8926-B5D920C74E1D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF058C0F-4CA8-4CB0-842F-4D62BFC1D393}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

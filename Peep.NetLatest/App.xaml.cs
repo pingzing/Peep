@@ -1,5 +1,4 @@
 ﻿using Peep.Shared;
-using System.Diagnostics;
 using System.Windows;
 
 namespace Peep.NetLatest
@@ -20,19 +19,19 @@ namespace Peep.NetLatest
             Shared.Startup.EnforceSingleInstance(this);
             Shared.Startup.DisableWPFTabletSupport();
 
-            string executablePath = Process.GetCurrentProcess().MainModule!.FileName!;
+            string executablePath = System.Environment.ProcessPath!;
 
             _startupHelper = new Startup(
                 trayIcon: NetLatest.Properties.Resources.PeepIcon,
-                closedPressed: () => Current.Shutdown(),
-                hotkeyPressed: (int hotkeyId) =>
+                closedPressed: Current.Shutdown,
+                hotkeyPressed: (int hotkeyId, ChosenCharacter chosenCharacter) =>
                 {
                     if (_peepWindow == null)
                     {
                         _peepWindow = new PeepWindow() { Topmost = true };
                     }
 
-                    _peepWindow.Peep();
+                    _peepWindow.Peep(chosenCharacter);
                 },
                 executablePath: executablePath
             );

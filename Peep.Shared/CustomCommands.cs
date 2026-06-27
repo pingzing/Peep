@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Peep.Shared
 {
@@ -12,5 +13,20 @@ namespace Peep.Shared
             nameof(ToggleOnStartup),
             typeof(Startup)
         );
+
+        /// <summary>
+        /// Command for picking a character to peep (or nyon) at you.
+        /// </summary>
+        public static readonly RoutedUICommand CharacterChosen = new RoutedUICommand(
+            "Character Chosen",
+            nameof(CharacterChosen),
+            typeof(Startup)
+        );
+    }
+
+    public class ChosenCharacterCommandArgs
+    {
+        public ChosenCharacter ChosenCharacter { get; set; }
+        public MenuItem CharacterSubmenu { get; set; }
     }
 }
