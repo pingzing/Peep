@@ -113,6 +113,16 @@
   <ItemGroup>
     <Resource Include="gifs\ventress\peep.gif" />
     <Resource Include="gifs\kawkaw\kawkaw_nyon.gif" />
+    <Resource Include="gifs\kawkaw\kawkaw_lick.gif" />
+    <Content Include="sounds\kawkaw\kawkaw_lick_1.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="sounds\kawkaw\kawkaw_lick_2.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="sounds\kawkaw\kawkaw_lick_3.wav">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="sounds\kawkaw\kawkaw_nyon_1.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

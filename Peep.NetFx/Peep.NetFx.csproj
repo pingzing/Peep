@@ -144,8 +144,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="gifs\kawkaw\kawkaw_nyon.gif" />
-    <Resource Include="gifs\ventress\peep.gif" />
+    <Content Include="sounds\kawkaw\kawkaw_lick_1.wav" />
+    <Content Include="sounds\kawkaw\kawkaw_lick_2.wav" />
+    <Content Include="sounds\kawkaw\kawkaw_lick_3.wav" />
     <Content Include="sounds\kawkaw\kawkaw_nyon_1.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

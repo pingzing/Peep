@@ -21,6 +21,9 @@ namespace Peep.Shared
             {
                 ("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
                 ("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+                ("sounds/kawkaw/kawkaw_lick_1.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+                ("sounds/kawkaw/kawkaw_lick_2.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+                ("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
             };
 
         private MediaPlayer _soundPlayer = new MediaPlayer();
@@ -117,14 +120,15 @@ namespace Peep.Shared
 
         private async void ImageElement_AnimationCompleted(DependencyObject d, AnimationCompletedEventArgs e)
         {
+            await Fade(ImageElement, OpacityProperty, FadeDirection.Out);
+            ImageElement.Opacity = 0;
+
             _gifController.Pause();
             _gifController.Rewind();
             _soundPlayer.Stop();
             _soundPlayer.Position = TimeSpan.Zero;
             _soundPlayer.Close();
 
-            await Fade(ImageElement, OpacityProperty, FadeDirection.Out);
-            ImageElement.Opacity = 0;
             Visibility = Visibility.Collapsed;
         }
 
