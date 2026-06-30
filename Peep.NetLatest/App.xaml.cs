@@ -1,4 +1,5 @@
 ﻿using Peep.Shared;
+using Peep.Windows.Shared;
 using System.Windows;
 
 namespace Peep.NetLatest
@@ -16,8 +17,8 @@ namespace Peep.NetLatest
 
         private void App_Startup(object sender, StartupEventArgs e)
         {
-            Shared.Startup.EnforceSingleInstance(this);
-            Shared.Startup.DisableWPFTabletSupport();
+            SingletonEnforcer.Enforce(() => Current.Shutdown());
+            Peep.Windows.Shared.Startup.DisableWPFTabletSupport();
 
             string executablePath = System.Environment.ProcessPath!;
 

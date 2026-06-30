@@ -1,6 +1,7 @@
-﻿#nullable enable
+﻿using Microsoft.Extensions.Configuration;
 using System;
-using System.Configuration;
+using System.IO;
+using System.Text.Json;
 
 namespace Peep.Shared;
 
@@ -12,46 +13,39 @@ public enum ChosenCharacter
 
 public class Settings
 {
+    private IConfigurationRoot _config;
+    private string _filePath;
+
     public ChosenCharacter ChosenCharacter
     {
         get =>
-            Enum.TryParse(ReadSetting(nameof(ChosenCharacter)), out ChosenCharacter value)
+            Enum.TryParse(_config[nameof(ChosenCharacter)], out ChosenCharacter value)
                 ? value
                 : ChosenCharacter.Ventress; // <-- default
         set => AddOrUpdateSetting(nameof(ChosenCharacter), value.ToString());
     }
 
-    private string? ReadSetting(string key)
+    public Settings(string filePath)
     {
-        try
+        _filePath = filePath;
+        if (!File.Exists(_filePath))
         {
-            var appSettings = ConfigurationManager.AppSettings;
-            string? result = appSettings[key] ?? null;
-            return result;
+            using (var streamWriter = File.CreateText(_filePath))
+            {
+                streamWriter.WriteLine("{}");
+            }
         }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to read {key} from config file. Exception: {ex}");
-            return null;
-        }
+        _config = new ConfigurationBuilder().AddJsonFile(filePath).Build();
     }
 
     private void AddOrUpdateSetting(string key, string value)
     {
         try
         {
-            var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            var settings = configFile.AppSettings.Settings;
-            if (settings[key] == null)
-            {
-                settings.Add(key, value);
-            }
-            else
-            {
-                settings[key].Value = value;
-            }
-            configFile.Save(ConfigurationSaveMode.Modified);
-            ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+            _config[key] = value;
+            string updatedJson = JsonSerializer.Serialize(this);
+            File.WriteAllText(_filePath, updatedJson);
+            _config.Reload();
         }
         catch (Exception ex)
         {

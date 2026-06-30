@@ -1,6 +1,7 @@
-﻿using Peep.Shared;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Windows;
+using Peep.Shared;
+using Peep.Windows.Shared;
 
 namespace Peep.NetFx
 {
@@ -17,8 +18,8 @@ namespace Peep.NetFx
 
         private void App_Startup(object sender, StartupEventArgs e)
         {
-            Shared.Startup.EnforceSingleInstance(this);
-            Shared.Startup.DisableWPFTabletSupport();
+            SingletonEnforcer.Enforce(() => Current.Shutdown());
+            Peep.Windows.Shared.Startup.DisableWPFTabletSupport();
 
             string executablePath = Process.GetCurrentProcess().MainModule.FileName;
 

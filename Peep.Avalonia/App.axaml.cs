@@ -1,0 +1,176 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
+using Peep.Shared;
+using SharpHook;
+using SharpHook.Providers;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Peep.Avalonia
+{
+    public partial class App : Application
+    {
+        private IClassicDesktopStyleApplicationLifetime _desktopLifetime = null!;
+        private NativeMenu _systemTrayMenu = null!;
+        private GlobalHookBase? _hotkeyHook = null;
+        private Task? _hotkeyHookTask = null;
+        private PeepWindow? _peepWindow = null;
+        private Settings _settings = null!;
+
+        // Character context menu buttons
+        private NativeMenuItem _ventressButton = null!;
+        private NativeMenuItem _kawkawButton = null!;
+
+        public override void Initialize()
+        {
+            AvaloniaXamlLoader.Load(this);
+
+            // TODO: There's probably a less brittle way to do this. Databinding?
+            _systemTrayMenu = TrayIcon.GetIcons(this)![0].Menu!;
+            _ventressButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[1]).Menu.Items[0];
+            _kawkawButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[1]).Menu.Items[1];
+
+            _settings = new Settings(Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
+
+            // TODO: Set which character is checked based on settings
+            ChosenCharacter initialChosenCharacter = _settings.ChosenCharacter;
+            switch (initialChosenCharacter)
+            {
+                case ChosenCharacter.Ventress:
+                    _ventressButton.IsChecked = true;
+                    break;
+                case ChosenCharacter.KawKaw:
+                    _kawkawButton.IsChecked = true;
+                    break;
+            }
+        }
+
+        public override void OnFrameworkInitializationCompleted()
+        {
+            // Things that would need to be crossplatformified:
+            // - Run on startup
+            // - Global hotkey binding
+            // - Settings, apparently (maybe already solved)
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                _desktopLifetime = desktop;
+                _desktopLifetime.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                desktop.Startup += Desktop_Startup;
+                desktop.Exit += Desktop_Exit;
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
+
+        private void Desktop_Startup(object? sender, ControlledApplicationLifetimeStartupEventArgs e)
+        {
+            SingletonEnforcer.Enforce(() => _desktopLifetime.Shutdown());
+
+            UioHookProvider.Instance.KeyTypedEnabled = false;
+            _hotkeyHook = new EventLoopGlobalHook(SharpHook.Data.GlobalHookType.Keyboard);
+            _hotkeyHook.KeyPressed += Hook_KeyPressed;
+            _hotkeyHook.KeyReleased += Hook_KeyReleased;
+            _hotkeyHookTask = _hotkeyHook.RunAsync();
+        }
+
+        private bool _isCtrlDown = false;
+        private bool _isAltDown = false;
+
+        private void Hook_KeyPressed(object? sender, KeyboardHookEventArgs e)
+        {
+            if (
+                e.Data.KeyCode == SharpHook.Data.KeyCode.VcLeftAlt
+                || e.Data.KeyCode == SharpHook.Data.KeyCode.VcRightAlt
+            )
+            {
+                _isAltDown = true;
+            }
+            if (
+                e.Data.KeyCode == SharpHook.Data.KeyCode.VcLeftControl
+                || e.Data.KeyCode == SharpHook.Data.KeyCode.VcRightControl
+            )
+            {
+                _isCtrlDown = true;
+            }
+            if (e.Data.KeyCode == SharpHook.Data.KeyCode.VcB && _isCtrlDown && _isAltDown)
+            {
+                try
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (_peepWindow == null)
+                        {
+                            _peepWindow = new PeepWindow();
+                        }
+
+                        _peepWindow.Peep(_settings.ChosenCharacter);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+        }
+
+        private void Hook_KeyReleased(object? sender, KeyboardHookEventArgs e)
+        {
+            if (
+                e.Data.KeyCode == SharpHook.Data.KeyCode.VcLeftAlt
+                || e.Data.KeyCode == SharpHook.Data.KeyCode.VcRightAlt
+            )
+            {
+                _isAltDown = false;
+            }
+            if (
+                e.Data.KeyCode == SharpHook.Data.KeyCode.VcLeftControl
+                || e.Data.KeyCode == SharpHook.Data.KeyCode.VcRightControl
+            )
+            {
+                _isCtrlDown = false;
+            }
+        }
+
+        private async void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
+        {
+            // Unhook the hook.
+            _hotkeyHook?.Dispose();
+            if (_hotkeyHookTask != null)
+            {
+                await _hotkeyHookTask;
+            }
+        }
+
+        private void NativeMenuItem_Click(object? sender, System.EventArgs e)
+        {
+            NativeMenuItem menuItem = (NativeMenuItem)sender!;
+            menuItem.IsChecked = menuItem.IsChecked;
+        }
+
+        private void LaunchOnStartup_Click(object? sender, System.EventArgs e)
+        {
+            // TODO: Implement... somehow? defer to platform-specific stuff?
+        }
+
+        private void CharacterVentress_Click(object? sender, System.EventArgs e)
+        {
+            _settings.ChosenCharacter = ChosenCharacter.Ventress;
+        }
+
+        private void CharacterKawKaw_Click(object? sender, System.EventArgs e)
+        {
+            _settings.ChosenCharacter = ChosenCharacter.KawKaw;
+        }
+
+        private void Close_Click(object? sender, System.EventArgs e)
+        {
+            _desktopLifetime.Shutdown();
+        }
+    }
+}

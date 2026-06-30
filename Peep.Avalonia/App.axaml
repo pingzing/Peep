@@ -1,0 +1,35 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Peep.Avalonia.App"
+             RequestedThemeVariant="Default">             
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="peep.ico" ToolTipText="Peep!">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Launch on startup" 
+                                        ToggleType="CheckBox"  
+                                        Click="LaunchOnStartup_Click"/>
+                        <NativeMenuItem Header="Characters">
+                            <NativeMenuItem.Menu>
+                                <NativeMenu>
+                                    <NativeMenuItem Header="Ventress (Bat Pony)" 
+                                                    ToggleType="Radio" 
+                                                    Click="CharacterVentress_Click"/>
+                                    <NativeMenuItem Header="KawKaw" 
+                                                    ToggleType="Radio" 
+                                                    Click="CharacterKawKaw_Click"/>
+                                </NativeMenu>
+                            </NativeMenuItem.Menu>
+                        </NativeMenuItem>
+                        <NativeMenuItem Header="Close" Click="Close_Click"/>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
+</Application>

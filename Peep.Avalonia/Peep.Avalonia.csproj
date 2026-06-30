@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="gifs\kawkaw\kawkaw_lick.gif" />
+    <None Remove="gifs\kawkaw\kawkaw_nyon.gif" />
+    <None Remove="gifs\ventress\peep.gif" />
+    <None Remove="settings.json" />
+    <None Remove="sounds\kawkaw\kawkaw_lick_1.wav" />
+    <None Remove="sounds\kawkaw\kawkaw_lick_2.wav" />
+    <None Remove="sounds\kawkaw\kawkaw_lick_3.wav" />
+    <None Remove="sounds\kawkaw\kawkaw_nyon_1.wav" />
+    <None Remove="sounds\kawkaw\kawkaw_nyon_2.wav" />
+    <None Remove="sounds\ventress\peep.mp3" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <AvaloniaResource Include="gifs\kawkaw\kawkaw_lick.gif" />
+    <AvaloniaResource Include="gifs\kawkaw\kawkaw_nyon.gif" />
+    <AvaloniaResource Include="gifs\ventress\peep.gif" />
+    <AvaloniaResource Include="peep.ico" />
+    <AvaloniaResource Include="sounds\kawkaw\kawkaw_lick_1.wav" />
+    <AvaloniaResource Include="sounds\kawkaw\kawkaw_lick_2.wav" />
+    <AvaloniaResource Include="sounds\kawkaw\kawkaw_lick_3.wav" />
+    <AvaloniaResource Include="sounds\kawkaw\kawkaw_nyon_1.wav" />
+    <AvaloniaResource Include="sounds\kawkaw\kawkaw_nyon_2.wav" />
+    <AvaloniaResource Include="sounds\ventress\peep.mp3" />          
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Content Include="settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.4" />
+    <PackageReference Include="Avalonia" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
+    <PackageReference Include="SharpHook" Version="7.1.2" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Peep.Shared\Peep.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="PeepWindow.axaml.cs">
+      <DependentUpon>PeepWindow.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+</Project>

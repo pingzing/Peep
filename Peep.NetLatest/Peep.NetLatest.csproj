@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Peep.Shared\Peep.Shared.csproj" />
+    <ProjectReference Include="..\Peep.Windows.Shared\Peep.Windows.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
