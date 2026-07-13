@@ -24,6 +24,9 @@ namespace Peep.Avalonia
 
         public PixelPoint LastMousePosition { get; private set; }
 
+        // Launch on startup button
+        private NativeMenuItem? _launchOnStartupButton = null;
+
         // Character context menu buttons
         private NativeMenuItem _ventressButton = null!;
         private NativeMenuItem _kawkawButton = null!;
@@ -34,12 +37,22 @@ namespace Peep.Avalonia
 
             // TODO: There's probably a less brittle way to do this. Databinding?
             _systemTrayMenu = TrayIcon.GetIcons(this)![0].Menu!;
-            _ventressButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[1]).Menu.Items[0];
-            _kawkawButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[1]).Menu.Items[1];
+
+            int characterMenuIndex;
+            if (OperatingSystem.IsWindows())
+            {
+                characterMenuIndex = 1;
+                _launchOnStartupButton = (NativeMenuItem)_systemTrayMenu.Items[0];
+            }
+            else
+            {
+                characterMenuIndex = 0;
+            }
+            _ventressButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[characterMenuIndex]).Menu.Items[0];
+            _kawkawButton = (NativeMenuItem)((NativeMenuItem)_systemTrayMenu.Items[characterMenuIndex]).Menu.Items[1];
 
             _settings = new Settings(Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
 
-            // TODO: Set which character is checked based on settings
             ChosenCharacter initialChosenCharacter = _settings.ChosenCharacter;
             switch (initialChosenCharacter)
             {
@@ -56,8 +69,6 @@ namespace Peep.Avalonia
         {
             // Things that would need to be crossplatformified:
             // - Run on startup
-            // - Global hotkey binding
-            // - Settings, apparently (maybe already solved)
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -75,10 +86,10 @@ namespace Peep.Avalonia
             SingletonEnforcer.Enforce(() => _desktopLifetime.Shutdown());
 
             UioHookProvider.Instance.KeyTypedEnabled = false;
-            _hook = new EventLoopGlobalHook(SharpHook.Data.GlobalHookType.Keyboard);
+            _hook = new EventLoopGlobalHook(SharpHook.Data.GlobalHookType.All);
             _hook.KeyPressed += Hook_KeyPressed;
             _hook.KeyReleased += Hook_KeyReleased;
-            //_hook.MouseMoved += MouseHook_MouseMoved;
+            _hook.MouseMoved += MouseHook_MouseMoved;
             _hookTask = _hook.RunAsync();
         }
 
@@ -112,7 +123,7 @@ namespace Peep.Avalonia
                             _peepWindow = new PeepWindow();
                         }
 
-                        _peepWindow.Peep(_settings.ChosenCharacter, LastMousePosition);
+                        _ = _peepWindow.Peep(_settings.ChosenCharacter, LastMousePosition);
                     });
                 }
                 catch (Exception ex)
@@ -140,7 +151,10 @@ namespace Peep.Avalonia
             }
         }
 
-        private void MouseHook_MouseMoved(object? sender, MouseHookEventArgs e) { }
+        private void MouseHook_MouseMoved(object? sender, MouseHookEventArgs e)
+        {
+            LastMousePosition = new(e.Data.X, e.Data.Y);
+        }
 
         private async void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
@@ -152,15 +166,12 @@ namespace Peep.Avalonia
             }
         }
 
-        private void NativeMenuItem_Click(object? sender, System.EventArgs e)
-        {
-            NativeMenuItem menuItem = (NativeMenuItem)sender!;
-            menuItem.IsChecked = menuItem.IsChecked;
-        }
-
         private void LaunchOnStartup_Click(object? sender, System.EventArgs e)
         {
-            // TODO: Implement... somehow? defer to platform-specific stuff?
+#if WINDOWS
+            NativeMenuItem menuItem = (NativeMenuItem)sender!;
+            LaunchOnStartup.ToggleOnStartup(menuItem.IsChecked);
+#endif
         }
 
         private void CharacterVentress_Click(object? sender, System.EventArgs e)

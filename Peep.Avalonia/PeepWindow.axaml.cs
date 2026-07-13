@@ -1,60 +1,45 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
-using AnimatedImage.Avalonia;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
 using NAudio.Wave;
 using Peep.Shared;
-using SkiaSharp;
+#if WINDOWS
+using Peep.Avalonia.Platform;
+#endif
 
 namespace Peep.Avalonia;
 
 public partial class PeepWindow : Window
 {
-    private record struct PeepInfo(string AudioPath, string VisualPath, Stretch VisualStretch, double SpeedRatio);
+    private record struct PeepInfo(string AudioPath, string VisualPath, Stretch VisualStretch);
 
     private readonly List<PeepInfo> _ventressInfo =
     [
-        new("sounds/ventress/peep.mp3", "gifs/ventress/peep.gif", Stretch.Uniform, 5.0),
+        new("sounds/ventress/peep.mp3", "gifs/ventress/peep.gif", Stretch.Uniform),
     ];
 
     private readonly List<PeepInfo> _kawKawInfo =
     [
-        new("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None, 1.0),
-        new("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None, 1.0),
-        new("sounds/kawkaw/kawkaw_lick_1.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None, 1.0),
-        new("sounds/kawkaw/kawkaw_lick_2.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None, 1.0),
-        new("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None, 1.0),
+        new("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+        new("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+        new("sounds/kawkaw/kawkaw_lick_1.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+        new("sounds/kawkaw/kawkaw_lick_2.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+        new("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
     ];
 
     private IWavePlayer? _waveOut;
     private WaveStream? _audioReader;
-    private readonly Dictionary<string, TimeSpan> _gifDurations = new();
+    private readonly Dictionary<string, LoadedGif> _loadedGifs = new();
 
     public PeepWindow()
     {
         InitializeComponent();
-
-        // Pre-compute durations for all distinct GIFs at startup
-        var distinctGifPaths = new HashSet<string>();
-        foreach (var entry in _ventressInfo)
-        {
-            distinctGifPaths.Add(entry.VisualPath);
-        }
-        foreach (var entry in _kawKawInfo)
-        {
-            distinctGifPaths.Add(entry.VisualPath);
-        }
-
-        foreach (var path in distinctGifPaths)
-        {
-            var uri = new Uri($"avares://Peep.Avalonia/{path}");
-            _gifDurations[path] = GetGifDuration(uri);
-        }
     }
 
     private PeepInfo GetPeepInfo(ChosenCharacter character)
@@ -70,26 +55,6 @@ public partial class PeepWindow : Window
         return targetList[randomIndex];
     }
 
-    private static TimeSpan GetGifDuration(Uri gifUri)
-    {
-        using var stream = AssetLoader.Open(gifUri);
-
-        using var codec = SKCodec.Create(stream);
-        if (codec == null)
-        {
-            return TimeSpan.Zero;
-        }
-
-        int totalMs = 0;
-        var frameInfos = codec.FrameInfo;
-        for (int i = 0; i < frameInfos.Length; i++)
-        {
-            totalMs += frameInfos[i].Duration;
-        }
-
-        return TimeSpan.FromMilliseconds(totalMs);
-    }
-
     public async Task Peep(ChosenCharacter chosenCharacter, PixelPoint mousePosition)
     {
         if (IsVisible)
@@ -99,50 +64,60 @@ public partial class PeepWindow : Window
 
         ImageElement.Opacity = 0;
 
-        (string audioPath, string visualPath, Stretch visualStretch, double speedRatio) = GetPeepInfo(chosenCharacter);
+        PeepInfo peepInfo = GetPeepInfo(chosenCharacter);
 
-        var gifUri = new Uri($"avares://Peep.Avalonia/{visualPath}");
+        // Lazy-load the gif if we haven't used it before.
+        LoadedGif loadedGif = _loadedGifs.GetOrCreate(
+            peepInfo.VisualPath,
+            () =>
+            {
+                using var stream = AssetLoader.Open(new Uri($"avares://Peep.Avalonia/{peepInfo.VisualPath}"));
+                return LoadedGif.Decode(stream);
+            }
+        );
 
         // Center on the monitor the mouse is currently on
         var screen = Screens.ScreenFromPoint(mousePosition) ?? Screens.Primary;
         if (screen != null)
         {
             var workArea = screen.WorkingArea;
-            int windowPixelWidth = (int)Math.Round(ClientSize.Width * screen.Scaling);
-            int windowPixelHeight = (int)Math.Round(ClientSize.Height * screen.Scaling);
+            int windowPixelWidth = (int)Math.Round(Width * screen.Scaling);
+            int windowPixelHeight = (int)Math.Round(Height * screen.Scaling);
             int x = workArea.X + (workArea.Width - windowPixelWidth) / 2;
             int y = workArea.Y + (workArea.Height - windowPixelHeight) / 2;
             Position = new PixelPoint(x, y);
         }
 
-        ImageElement.Stretch = visualStretch;
-        ImageBehavior.SetSpeedRatio(ImageElement, 0);
-        ImageBehavior.SetAnimatedSource(ImageElement, AnimatedImageSourceConverter.Convert(gifUri.ToString()));
-        ImageBehavior.SetRepeatBehavior(ImageElement, RepeatBehavior.Forever); // <-- prevent GIF from finishing and freezing on first frame
-
-        TimeSpan visualDuration = _gifDurations.GetValueOrDefault(visualPath, TimeSpan.Zero);
+        ImageElement.Stretch = peepInfo.VisualStretch;
+        ImageElement.RepeatBehavior = GifRepeatBehavior.None;
+        ImageElement.SetGif(loadedGif);
 
         IsVisible = true;
+#if WINDOWS
+        this.SetWindowHitTransparent();
+#endif
         ImageElement.Opacity = 1;
         await Task.Delay(150); // <-- Opacity transition duration
 
-        ImageBehavior.SetSpeedRatio(ImageElement, speedRatio);
+        ImageElement.Start();
 
         // Play sound, slaved to animation start to reduce desync
-        using var audioStream = AssetLoader.Open(new Uri($"avares://Peep.Avalonia/{audioPath}"));
+        using var audioStream = AssetLoader.Open(new Uri($"avares://Peep.Avalonia/{peepInfo.AudioPath}"));
         var audioMs = new MemoryStream();
         await audioStream.CopyToAsync(audioMs);
         audioMs.Position = 0;
 
-        _audioReader = new WaveFileReader(audioMs);
+        _audioReader = Path.GetExtension(peepInfo.AudioPath).Equals(".mp3", StringComparison.OrdinalIgnoreCase)
+            ? new Mp3FileReader(audioMs)
+            : new WaveFileReader(audioMs);
         _waveOut = new WaveOutEvent();
         _waveOut.Init(_audioReader);
         _waveOut.Play();
 
-        // Wait for GIF to finish
-        await Task.Delay(visualDuration);
+        // Wait for one GIF loop to finish
+        await Task.Delay(ImageElement.TotalDuration);
 
-        ImageBehavior.SetSpeedRatio(ImageElement, 0);
+        ImageElement.Stop();
         ImageElement.Opacity = 0;
         await Task.Delay(150); // <-- Opacity transition duration
 

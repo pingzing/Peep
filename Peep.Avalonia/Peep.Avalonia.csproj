@@ -1,17 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net9.0;net9.0-windows</TargetFrameworks>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!--Compile and NAOT stuff-->
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
+
   <ItemGroup>
     <None Remove="gifs\kawkaw\kawkaw_lick.gif" />
     <None Remove="gifs\kawkaw\kawkaw_nyon.gif" />
     <None Remove="gifs\ventress\peep.gif" />
-    <None Remove="settings.json" />
     <None Remove="sounds\kawkaw\kawkaw_lick_1.wav" />
     <None Remove="sounds\kawkaw\kawkaw_lick_2.wav" />
     <None Remove="sounds\kawkaw\kawkaw_lick_3.wav" />
@@ -34,24 +37,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="settings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\Peep.Shared\Peep.Shared.csproj" />
+  </ItemGroup>
+
+  <!--CSWin32 platform-locked-->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
+    <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.298">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.4" />
     <PackageReference Include="Avalonia" Version="12.0.5" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
     <PackageReference Include="SharpHook" Version="7.1.2" />
-    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Peep.Shared\Peep.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

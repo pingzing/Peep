@@ -43,7 +43,7 @@ public class Settings
         try
         {
             _config[key] = value;
-            string updatedJson = JsonSerializer.Serialize(this);
+            string updatedJson = JsonSerializer.Serialize(this, typeof(Settings), SettingsSerializerContext.Default);
             File.WriteAllText(_filePath, updatedJson);
             _config.Reload();
         }

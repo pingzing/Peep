@@ -12,7 +12,11 @@
       <TrayIcon Icon="peep.ico" ToolTipText="Peep!">
         <TrayIcon.Menu>
           <NativeMenu>
-            <NativeMenuItem Header="Launch on startup" ToggleType="CheckBox" Click="LaunchOnStartup_Click" />
+            <OnPlatform>
+              <OnPlatform.Windows>
+                <NativeMenuItem Header="Launch on startup" ToggleType="CheckBox" Click="LaunchOnStartup_Click" />
+              </OnPlatform.Windows>
+            </OnPlatform>
             <NativeMenuItem Header="Characters">
               <NativeMenuItem.Menu>
                 <NativeMenu>

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>peep.ico</ApplicationIcon>
+    <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
 
   <!--Release-only publish settings-->

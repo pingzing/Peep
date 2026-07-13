@@ -3,16 +3,13 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:anim="https://github.com/whistyun/AnimatedImage.Avalonia"
-  xmlns:gif="using:Avalonia.Labs.Gif"
-  xmlns:animImage="using:Avalonia.Labs.AnimatedImage"
+  xmlns:local="using:Peep.Avalonia"
   mc:Ignorable="d"
   d:DesignWidth="800"
   d:DesignHeight="450"
   x:Class="Peep.Avalonia.PeepWindow"
   Title="Peep"
   Background="Transparent"
-  IsHitTestVisible="False"
   Height="160"
   Width="156"
   CanResize="False"
@@ -20,15 +17,23 @@
   ShowInTaskbar="False"
   TransparencyLevelHint="Transparent"
   TransparencyBackgroundFallback="Transparent"
+  ShowActivated="False"
   WindowDecorations="None"
 >
   <Grid IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center">
-    <Image Name="ImageElement" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="1">
-      <Image.Transitions>
+    <local:GifAnimatorControl
+      Name="ImageElement"
+      IsHitTestVisible="false"
+      HorizontalAlignment="Center"
+      VerticalAlignment="Center"
+      Opacity="1"
+      RepeatBehavior="None"
+    >
+      <local:GifAnimatorControl.Transitions>
         <Transitions>
           <DoubleTransition Property="Opacity" Duration="0:0:0.150" />
         </Transitions>
-      </Image.Transitions>
-    </Image>
+      </local:GifAnimatorControl.Transitions>
+    </local:GifAnimatorControl>
   </Grid>
 </Window>
