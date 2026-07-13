@@ -1,5 +1,4 @@
-﻿using Peep.Shared;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -8,24 +7,26 @@ using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Peep.Shared;
 using XamlAnimatedGif;
 
 namespace Peep.Windows.Shared;
 
 public partial class PeepWindow : Window
 {
-    private readonly List<(string, string, Stretch)> _ventressInfo =
-        new() { ("sounds/ventress/peep.mp3", "gifs/ventress/peep.gif", Stretch.Uniform) };
+    private readonly List<(string, string, Stretch)> _ventressInfo = new()
+    {
+        ("sounds/ventress/peep.mp3", "gifs/ventress/peep.gif", Stretch.Uniform),
+    };
 
-    private readonly List<(string, string, Stretch)> _kawKawInfo =
-        new()
-        {
-            ("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
-            ("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
-            ("sounds/kawkaw/kawkaw_lick_1.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
-            ("sounds/kawkaw/kawkaw_lick_2.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
-            ("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
-        };
+    private readonly List<(string, string, Stretch)> _kawKawInfo = new()
+    {
+        ("sounds/kawkaw/kawkaw_nyon_1.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+        ("sounds/kawkaw/kawkaw_nyon_2.wav", "gifs/kawkaw/kawkaw_nyon.gif", Stretch.None),
+        ("sounds/kawkaw/kawkaw_lick_1.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+        ("sounds/kawkaw/kawkaw_lick_2.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+        ("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
+    };
 
     private MediaPlayer _soundPlayer = new MediaPlayer();
     private Animator _gifController;
@@ -57,7 +58,7 @@ public partial class PeepWindow : Window
         {
             ChosenCharacter.Ventress => _ventressInfo,
             ChosenCharacter.KawKaw => _kawKawInfo,
-            _ => throw new Exception($"Invalid character: {character}")
+            _ => throw new Exception($"Invalid character: {character}"),
         };
 
         int randomIndex = _random.Next(0, targetList.Count);
@@ -134,7 +135,7 @@ public partial class PeepWindow : Window
     private enum FadeDirection
     {
         In,
-        Out
+        Out,
     }
 
     private Task Fade(UIElement element, DependencyProperty propertyToFade, FadeDirection direction)
@@ -145,7 +146,7 @@ public partial class PeepWindow : Window
             To = direction == FadeDirection.In ? 1.0 : 0.0,
             Duration = TimeSpan.FromMilliseconds(150),
             AutoReverse = false,
-            FillBehavior = FillBehavior.Stop
+            FillBehavior = FillBehavior.Stop,
         };
         var tcs = new TaskCompletionSource<bool>();
         fade.Completed += (s, e) => tcs.SetResult(true);

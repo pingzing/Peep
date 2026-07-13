@@ -1,20 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-	<ApplicationIcon>peep.ico</ApplicationIcon>
+    <ApplicationIcon>peep.ico</ApplicationIcon>
   </PropertyGroup>
 
-	<!--Release-only publish settings-->
-	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<PublishSingleFile>true</PublishSingleFile>
-		<SelfContained>true</SelfContained>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		<TrimMode>copyused</TrimMode>
-	</PropertyGroup>
+  <!--Release-only publish settings-->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <TrimMode>copyused</TrimMode>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Remove="peep.ico" />
@@ -42,5 +41,4 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-
 </Project>

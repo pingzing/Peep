@@ -1,3 +1,8 @@
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -5,11 +10,6 @@ using Avalonia.Markup.Xaml;
 using Peep.Shared;
 using SharpHook;
 using SharpHook.Providers;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Peep.Avalonia
 {
@@ -17,10 +17,12 @@ namespace Peep.Avalonia
     {
         private IClassicDesktopStyleApplicationLifetime _desktopLifetime = null!;
         private NativeMenu _systemTrayMenu = null!;
-        private GlobalHookBase? _hotkeyHook = null;
-        private Task? _hotkeyHookTask = null;
+        private GlobalHookBase? _hook = null;
+        private Task? _hookTask = null;
         private PeepWindow? _peepWindow = null;
         private Settings _settings = null!;
+
+        public PixelPoint LastMousePosition { get; private set; }
 
         // Character context menu buttons
         private NativeMenuItem _ventressButton = null!;
@@ -73,10 +75,11 @@ namespace Peep.Avalonia
             SingletonEnforcer.Enforce(() => _desktopLifetime.Shutdown());
 
             UioHookProvider.Instance.KeyTypedEnabled = false;
-            _hotkeyHook = new EventLoopGlobalHook(SharpHook.Data.GlobalHookType.Keyboard);
-            _hotkeyHook.KeyPressed += Hook_KeyPressed;
-            _hotkeyHook.KeyReleased += Hook_KeyReleased;
-            _hotkeyHookTask = _hotkeyHook.RunAsync();
+            _hook = new EventLoopGlobalHook(SharpHook.Data.GlobalHookType.Keyboard);
+            _hook.KeyPressed += Hook_KeyPressed;
+            _hook.KeyReleased += Hook_KeyReleased;
+            //_hook.MouseMoved += MouseHook_MouseMoved;
+            _hookTask = _hook.RunAsync();
         }
 
         private bool _isCtrlDown = false;
@@ -109,7 +112,7 @@ namespace Peep.Avalonia
                             _peepWindow = new PeepWindow();
                         }
 
-                        _peepWindow.Peep(_settings.ChosenCharacter);
+                        _peepWindow.Peep(_settings.ChosenCharacter, LastMousePosition);
                     });
                 }
                 catch (Exception ex)
@@ -137,13 +140,15 @@ namespace Peep.Avalonia
             }
         }
 
+        private void MouseHook_MouseMoved(object? sender, MouseHookEventArgs e) { }
+
         private async void Desktop_Exit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
-            // Unhook the hook.
-            _hotkeyHook?.Dispose();
-            if (_hotkeyHookTask != null)
+            // Unhook the hooks.
+            _hook?.Dispose();
+            if (_hookTask != null)
             {
-                await _hotkeyHookTask;
+                await _hookTask;
             }
         }
 

@@ -1,19 +1,19 @@
 ﻿#nullable enable
-using Hardcodet.Wpf.TaskbarNotification;
 using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+using Hardcodet.Wpf.TaskbarNotification;
+using Peep.Shared;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using System.Reflection;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using Peep.Shared;
 
 namespace Peep.Windows.Shared;
 
@@ -57,7 +57,7 @@ public class Startup
         contextMenu.Items.Add(selectCharacterMenuItem);
 
         // Close button
-        MenuItem closeMenuItem = new MenuItem() { Header = "Close", Command = ApplicationCommands.Close, };
+        MenuItem closeMenuItem = new MenuItem() { Header = "Close", Command = ApplicationCommands.Close };
         closeMenuItem.CommandBindings.Add(
             new CommandBinding(ApplicationCommands.Close, CloseExecuted, CanExecuteClose)
         );
@@ -92,7 +92,7 @@ public class Startup
             Header = "Launch on startup",
             Command = CustomCommands.ToggleOnStartup,
             IsCheckable = true,
-            IsChecked = isEnabled
+            IsChecked = isEnabled,
         };
         toggleStartup.CommandBindings.Add(
             new CommandBinding(CustomCommands.ToggleOnStartup, ToggleOnStartupExecuted, CanExecuteToggleOnStartup)
@@ -104,41 +104,39 @@ public class Startup
     {
         ChosenCharacter chosenCharacter = _settings.ChosenCharacter;
 
-        MenuItem topLevelMenuItem = new() { Header = "Select character", IsCheckable = false, };
+        MenuItem topLevelMenuItem = new() { Header = "Select character", IsCheckable = false };
 
-        MenuItem ventressItem =
-            new()
+        MenuItem ventressItem = new()
+        {
+            Header = "Ventress (Bat Pony)",
+            Tag = ChosenCharacter.Ventress,
+            IsCheckable = true,
+            Command = CustomCommands.CharacterChosen,
+            CommandParameter = new ChosenCharacterCommandArgs
             {
-                Header = "Ventress (Bat Pony)",
-                Tag = ChosenCharacter.Ventress,
-                IsCheckable = true,
-                Command = CustomCommands.CharacterChosen,
-                CommandParameter = new ChosenCharacterCommandArgs
-                {
-                    ChosenCharacter = ChosenCharacter.Ventress,
-                    CharacterSubmenu = topLevelMenuItem
-                },
-                IsChecked = chosenCharacter == ChosenCharacter.Ventress,
-            };
+                ChosenCharacter = ChosenCharacter.Ventress,
+                CharacterSubmenu = topLevelMenuItem,
+            },
+            IsChecked = chosenCharacter == ChosenCharacter.Ventress,
+        };
         ventressItem.CommandBindings.Add(
             new CommandBinding(CustomCommands.CharacterChosen, CharacterChosenExecuted, CanExecuteCharacterChosen)
         );
         topLevelMenuItem.Items.Add(ventressItem);
 
-        MenuItem kawKawItem =
-            new()
+        MenuItem kawKawItem = new()
+        {
+            Header = "KawKaw",
+            Tag = ChosenCharacter.KawKaw,
+            IsCheckable = true,
+            Command = CustomCommands.CharacterChosen,
+            CommandParameter = new ChosenCharacterCommandArgs
             {
-                Header = "KawKaw",
-                Tag = ChosenCharacter.KawKaw,
-                IsCheckable = true,
-                Command = CustomCommands.CharacterChosen,
-                CommandParameter = new ChosenCharacterCommandArgs
-                {
-                    ChosenCharacter = ChosenCharacter.KawKaw,
-                    CharacterSubmenu = topLevelMenuItem
-                },
-                IsChecked = chosenCharacter == ChosenCharacter.KawKaw,
-            };
+                ChosenCharacter = ChosenCharacter.KawKaw,
+                CharacterSubmenu = topLevelMenuItem,
+            },
+            IsChecked = chosenCharacter == ChosenCharacter.KawKaw,
+        };
         kawKawItem.CommandBindings.Add(
             new CommandBinding(CustomCommands.CharacterChosen, CharacterChosenExecuted, CanExecuteCharacterChosen)
         );

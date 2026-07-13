@@ -1,6 +1,6 @@
-﻿using Peep.Shared;
+﻿using System.Windows;
+using Peep.Shared;
 using Peep.Windows.Shared;
-using System.Windows;
 
 namespace Peep.NetLatest
 {

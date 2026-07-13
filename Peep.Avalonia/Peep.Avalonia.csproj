@@ -19,7 +19,7 @@
     <None Remove="sounds\kawkaw\kawkaw_nyon_2.wav" />
     <None Remove="sounds\ventress\peep.mp3" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <AvaloniaResource Include="gifs\kawkaw\kawkaw_lick.gif" />
     <AvaloniaResource Include="gifs\kawkaw\kawkaw_nyon.gif" />
@@ -30,9 +30,9 @@
     <AvaloniaResource Include="sounds\kawkaw\kawkaw_lick_3.wav" />
     <AvaloniaResource Include="sounds\kawkaw\kawkaw_nyon_1.wav" />
     <AvaloniaResource Include="sounds\kawkaw\kawkaw_nyon_2.wav" />
-    <AvaloniaResource Include="sounds\ventress\peep.mp3" />          
+    <AvaloniaResource Include="sounds\ventress\peep.mp3" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <Content Include="settings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -42,6 +42,7 @@
   <ItemGroup>
     <PackageReference Include="AnimatedImage.Avalonia" Version="2.1.4" />
     <PackageReference Include="Avalonia" Version="12.0.5" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Avalonia.Desktop" Version="12.0.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.5" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.5" />
