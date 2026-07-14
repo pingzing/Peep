@@ -13,6 +13,9 @@ using SharpHook.Providers;
 
 namespace Peep.Avalonia
 {
+    // TODO: Things that need crossplatform work still
+    // - Launch on startup (probably per-platform, Windows is done)
+    // - Click-through Windows (definitely per-platform, Windows is done)
     public partial class App : Application
     {
         private IClassicDesktopStyleApplicationLifetime _desktopLifetime = null!;
@@ -67,9 +70,6 @@ namespace Peep.Avalonia
 
         public override void OnFrameworkInitializationCompleted()
         {
-            // Things that would need to be crossplatformified:
-            // - Run on startup
-
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
                 _desktopLifetime = desktop;

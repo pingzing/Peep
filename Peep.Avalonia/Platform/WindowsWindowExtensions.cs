@@ -8,14 +8,14 @@ using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Peep.Avalonia.Platform;
 
-public static class WindowExtensions
+public class WindowsWindowExtensions : IWindowExtensions
 {
     private const int WS_EX_LAYERED = 0x00080000;
     private const int WS_EX_TRANSPARENT = 0x00000020;
 
-    public static void SetWindowHitTransparent(this Window _window)
+    public void SetHitTransparent(Window window)
     {
-        nint? handle = _window.TryGetPlatformHandle()?.Handle;
+        nint? handle = window.TryGetPlatformHandle()?.Handle;
         if (!handle.HasValue)
         {
             Debug.WriteLine($"TryGetPlatform() handle failed to get a handle.");

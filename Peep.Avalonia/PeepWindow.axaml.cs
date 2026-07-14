@@ -1,17 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Platform;
 using NAudio.Wave;
-using Peep.Shared;
-#if WINDOWS
 using Peep.Avalonia.Platform;
-#endif
+using Peep.Shared;
 
 namespace Peep.Avalonia;
 
@@ -33,6 +30,7 @@ public partial class PeepWindow : Window
         new("sounds/kawkaw/kawkaw_lick_3.wav", "gifs/kawkaw/kawkaw_lick.gif", Stretch.None),
     ];
 
+    private IWindowExtensions? _windowExtensions;
     private IWavePlayer? _waveOut;
     private WaveStream? _audioReader;
     private readonly Dictionary<string, LoadedGif> _loadedGifs = new();
@@ -40,6 +38,13 @@ public partial class PeepWindow : Window
     public PeepWindow()
     {
         InitializeComponent();
+#if WINDOWS
+        _windowExtensions = new WindowsWindowExtensions();
+#endif
+        if (OperatingSystem.IsMacOS())
+        {
+            _windowExtensions = new MacOSWindowExtensions();
+        }
     }
 
     private PeepInfo GetPeepInfo(ChosenCharacter character)
@@ -93,9 +98,8 @@ public partial class PeepWindow : Window
         ImageElement.SetGif(loadedGif);
 
         IsVisible = true;
-#if WINDOWS
-        this.SetWindowHitTransparent();
-#endif
+        _windowExtensions?.SetHitTransparent(this);
+
         ImageElement.Opacity = 1;
         await Task.Delay(150); // <-- Opacity transition duration
 
