@@ -2,3 +2,5 @@
 SetWindowLong
 SetLayeredWindowAttributes
 SetLastError
+CoCreateInstance
+ShellLink

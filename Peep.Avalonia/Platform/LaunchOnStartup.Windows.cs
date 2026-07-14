@@ -1,13 +1,13 @@
-﻿using System;
+﻿#if WINDOWS
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
+using System.Runtime.InteropServices.Marshalling;
+using Windows.Win32.UI.Shell;
 
 namespace Peep.Avalonia;
 
-#if WINDOWS
 public class LaunchOnStartup
 {
     private const string StartupEntryName = "Peep.lnk";
@@ -41,7 +41,7 @@ public class LaunchOnStartup
         if (launchOnStartup) // implies doesn't exist
         {
             string targetPath = Path.Combine(Environment.ProcessPath!);
-            IShellLink shortcut = (IShellLink)new ShellLink();
+            IShellLink shortcut = ShellLink.CreateInstance<IShellLink>();
             shortcut.SetDescription("Startup shortcut for Peep");
             shortcut.SetPath(targetPath);
 
@@ -69,42 +69,43 @@ public class LaunchOnStartup
     }
 }
 
-// Infra classes and interfaces for creating shortcuts
-[ComImport]
-[Guid("00021401-0000-0000-C000-000000000046")]
-internal class ShellLink { }
-
-[ComImport]
+[GeneratedComInterface]
 [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 [Guid("000214F9-0000-0000-C000-000000000046")]
-internal interface IShellLink
+internal partial interface IShellLink
 {
-    void GetPath(
-        [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile,
-        int cchMaxPath,
-        out IntPtr pfd,
-        int fFlags
-    );
-    void GetIDList(out IntPtr ppidl);
-    void SetIDList(IntPtr pidl);
-    void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszName, int cchMaxName);
+    void GetPath([MarshalAs(UnmanagedType.LPWStr)] out string pszFile, int cch, nint pfd, uint fFlags);
+    void GetIDList(out nint ppidl);
+    void SetIDList(nint pidl);
+    void GetDescription([MarshalAs(UnmanagedType.LPWStr)] out string pszName, int cch);
     void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-    void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszDir, int cchMaxPath);
+    void GetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] out string pszDir, int cch);
     void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-    void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszArgs, int cchMaxPath);
+    void GetArguments([MarshalAs(UnmanagedType.LPWStr)] out string pszArgs, int cch);
     void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
     void GetHotkey(out short pwHotkey);
     void SetHotkey(short wHotkey);
     void GetShowCmd(out int piShowCmd);
     void SetShowCmd(int iShowCmd);
-    void GetIconLocation(
-        [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszIconPath,
-        int cchIconPath,
-        out int piIcon
-    );
+    void GetIconLocation([MarshalAs(UnmanagedType.LPWStr)] out string pszIconPath, int cch, out int piIcon);
     void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
-    void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, int dwReserved);
-    void Resolve(IntPtr hwnd, int fFlags);
+    void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved);
+    void Resolve(nint hwnd, uint fFlags);
     void SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
+}
+
+[GeneratedComInterface]
+[Guid("0000010b-0000-0000-C000-000000000046")]
+internal partial interface IPersistFile
+{
+    void GetClassID(out Guid pClassID);
+    void IsDirty();
+    void Load([MarshalAs(UnmanagedType.LPWStr)] string pszFileName, int dwMode);
+    void Save(
+        [MarshalAs(UnmanagedType.LPWStr)] string pszFileName,
+        [MarshalAs(UnmanagedType.VariantBool)] bool fRemember
+    );
+    void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string pszFileName);
+    void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string ppszFileName);
 }
 #endif
